@@ -1,5 +1,5 @@
 import numpy as np
-from matrix_generation import _random_sparse, _set_spectal_radius
+from matrix_generation import _random_sparse, _set_spectral_radius
 from scipy import stats
 from functools import partial
 
@@ -8,10 +8,10 @@ class Reservoir:
     def __init__(self, n_input: int,
                  n_reservoir: int,
                  # n_output: int,
-                 alpha: int = 0.01,
+                 alpha: int = 0.02,
                  dtype: np.dtype = np.float64,
                  spectral_radius: int = 0.8,
-                 reservoir_density: int = 0.2,
+                 reservoir_density: int = 0.02,
                  random_seed=None,
                  activation=np.tanh,
                  input_density: int = 1.0):
@@ -39,7 +39,7 @@ class Reservoir:
         self.dtype = dtype
 
         self.W = _random_sparse(self.n_reservoir, self.n_reservoir, self._reservoir_density, sparsity_type="dense")
-        self.W = _set_spectal_radius(self.W, self._spectral_radius)
+        self.W = _set_spectral_radius(self.W, self._spectral_radius)
 
         self.W_in = _random_sparse(self.n_reservoir, self.n_input, self._reservoir_density)
 
