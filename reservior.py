@@ -8,9 +8,9 @@ class Reservoir:
     def __init__(self, n_input: int,
                  n_reservoir: int,
                  # n_output: int,
-                 alpha: int = 0.1,
+                 alpha: int = 0.01,
                  dtype: np.dtype = np.float64,
-                 spectral_radius: int = 1.0,
+                 spectral_radius: int = 0.8,
                  reservoir_density: int = 0.2,
                  random_seed=None,
                  activation=np.tanh,
@@ -38,11 +38,10 @@ class Reservoir:
         self.alpha = alpha
         self.dtype = dtype
 
-        self.W = _random_sparse(self.n_reservoir, self.n_reservoir, self._reservoir_density)
-        self.W = _set_spectal_radius(self.W, 1)
+        self.W = _random_sparse(self.n_reservoir, self.n_reservoir, self._reservoir_density, sparsity_type="dense")
+        self.W = _set_spectal_radius(self.W, self._spectral_radius)
 
         self.W_in = _random_sparse(self.n_reservoir, self.n_input, self._reservoir_density)
-        self.W_in = _set_spectal_radius(self.W_in, 1)
 
         self.state = self.zero_state()
 
@@ -66,13 +65,22 @@ class Reservoir:
     def propagate(self, x: np.ndarray):
         self.state = self.forward_internal(x)
 
-    def run(self, X):
+    def train(self, X):
+        self.reset()
         sequence_length = X.shape[0]
         states = np.zeros((sequence_length, self.n_reservoir))
-        for i in range(len(X)):
+        for i in range(sequence_length):
             states[i, :] = self.state
             self.propagate(X[i])
 
         return states
 
+    def run(self, sequence_length: int, model, initial_state=None):
+        self.reset(initial_state)
+        states = np.zeros((sequence_length, self.n_input))
+        for i in range(sequence_length):
+            states[i, :] = model.predict(self.state)
+            self.propagate(states[i, :])
+
+        return states
 
