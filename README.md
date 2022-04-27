@@ -1,2 +1,1 @@
-# Reservior Computing
- 
+# SQUID – A Study in Reservoir Computing

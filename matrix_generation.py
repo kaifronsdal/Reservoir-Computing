@@ -25,7 +25,7 @@ def _random_sparse(n: int, m: int,
     return matrix
 
 
-def _set_spectal_radius(matrix: np.ndarray, radius: float):
+def _set_spectral_radius(matrix: np.ndarray, radius: float):
     max_eigenvalue = np.max(np.abs(sparse.linalg.eigs(matrix)[0]))
     matrix *= radius / max_eigenvalue
     return matrix
