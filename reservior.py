@@ -11,7 +11,7 @@ class Reservoir:
                  alpha: int = 0.01,
                  dtype: np.dtype = np.float64,
                  spectral_radius: int = 0.8,
-                 reservoir_density: int = 0.2,
+                 reservoir_density: int = 0.025,
                  random_seed=None,
                  activation=np.tanh,
                  input_density: int = 1.0):
@@ -30,7 +30,7 @@ class Reservoir:
         # self.n_output = n_output
 
         self._spectral_radius = spectral_radius
-        self._reservoir_density = reservoir_density
+        self._reservoir_density = min(8 / n_input, 1)
         self.input_density = input_density
         self._activation = activation
         self._random_seed = random_seed
