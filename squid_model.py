@@ -5,6 +5,7 @@ from reservoirpy.nodes import Reservoir as ReservoirPy, Ridge
 from reservoirpy.observables import rmse, rsquare
 from reservoirpy.datasets import mackey_glass
 from sklearn.linear_model import LinearRegression, SGDRegressor
+from wiener_filter import WienerFilter
 
 
 # In most of the data, there's a time period with no impulse being applied to the axon
@@ -42,64 +43,70 @@ def squid_predict(axon_num, train_time=400000):
     plt.legend()
     plt.show()
 
-def test_reservoir_py(axon_num, reservoir_size, lr, sr, reg, train_time, predict_n, warmup, num_points, save_data=False, plot_data=False):
-    reservoir = ReservoirPy(units=reservoir_size, lr=lr, sr=sr)
-    ridge = Ridge(output_dim=1, ridge=reg)
+def wiener_filter_predict(axon_num, train_time=10000, num_timesteps=1000):
+    data = create_data(50, 0.05, axon_num, 2 * train_time)
+    train_data = data[:train_time].reshape(-1, 1)
+    test_data = data[:2 * train_time].reshape(-1, 1)
 
-    # reservoir <<= ridge
-    esn = reservoir >> ridge
+    wf = WienerFilter(train_data, train_data, num_timesteps)
+    L = wf.optimize()
+
+    preds = np.array([])
+    overall_states = test_data[0:num_timesteps].reshape(-1, 1)
+    for i in range(num_timesteps, len(test_data)):
+        curr_input = np.vstack((overall_states[i - num_timesteps: i].reshape(-1, 1), 1))
+        next_pred = L @ curr_input
+
+        overall_states = np.append(overall_states, next_pred)
+        preds = np.append(preds, next_pred)
+
+    preds = preds.T
+
+    plt.figure(figsize=(10, 3))
+    plt.title("SQUID Training Data: Wiener Filter, No Reservoir")
+    plt.xlabel("$t$")
+    plt.plot(test_data[num_timesteps:3000], label="squid data", color="blue")
+    plt.plot(preds[:3000-num_timesteps], label="prediction", color="red")
+    plt.legend()
+    #plt.show()
+    plt.savefig("wiener_squid_preds3.png")
+
+
+def test_reservoir_py(axon_num, train_time, warmup, num_points):
+    reservoir = ReservoirPy(units=20, lr=0.3, sr=1.25)
+    readout = Ridge(output_dim=1, ridge=1e-5)
+    esn = reservoir >> readout
 
     data = np.array(create_data(50, 0.05, axon_num, num_points))
     data = data.reshape(len(data), 1)
 
-    if (predict_n + train_time >= len(data)):
-        raise Exception(f"Cannot predict more than {len(data) - train_time} time-steps!")
-
-    esn = esn.fit(data[:train_time], data[1:train_time + 1], warmup=warmup)
-
-    test_warmup = esn.run(data[train_time - warmup:train_time], reset=True)
-
-    predictions = np.empty((predict_n, 1))
-    init = test_warmup[-1].reshape(1, -1)
-
-    for i in range(predict_n):
-        init = esn(init)
-        predictions[i] = init
+    esn.fit(data[:train_time], data[1:train_time + 1], warmup=warmup)
+    predictions = esn.run(data[train_time + 1:-1])
 
     print(
-        "Root mean-squared error:", rmse(data[train_time + 1:train_time + predict_n + 1], predictions),
-        "R^2 score:", rsquare(data[train_time + 1:train_time + predict_n + 1], predictions)
+        "Root mean-squared error:", rmse(data[train_time + 2:], predictions),
+        "R^2 score:", rsquare(data[train_time + 2:], predictions)
     )
 
-    if save_data:
-        np.savetxt(f"predictions/axon_{axon_num}_test_data.csv", data[train_time + 1:train_time + predict_n], delimiter=",")
-        np.savetxt(f"predictions/axon_{axon_num}_prediction.csv", predictions, delimiter=",")
+    np.savetxt(f"predictions/axon_{axon_num}_test_data.csv", data[train_time + 2:], delimiter=",")
+    np.savetxt(f"predictions/axon_{axon_num}_prediction.csv", predictions, delimiter=",")
 
-    if plot_data:
-        plt.figure(figsize=(10, 3))
-        plt.title("SQUID Training Data: ReservoirPy")
-        plt.xlabel("$t$")
-        plt.plot(data[train_time + 1:train_time + predict_n], label="Test Data", color="blue")
-        plt.plot(predictions, label="Prediction", color="red")
-        plt.legend()
-        plt.show()
-        plt.savefig(f"predictions/axon_{axon_num}_timeseries.png")
+    plt.figure(figsize=(10, 3))
+    plt.title("SQUID Training Data: ReservoirPy")
+    plt.xlabel("$t$")
+    plt.plot(np.arange(0, len(data), 1), data, label="Test Data", color="blue")
+    plt.plot(np.arange(train_time + 2, len(data), 1), predictions, label="Prediction", color="red")
+    plt.legend()
+    plt.show()
 
 
 # squid_predict(1)
-# {"iss": 0.9, "lr": 0.002001591748531257, "ridge": 1e-07, "seed": 1234, "size": 871.3675133429208, "sr": 0.08189176846577592}
-# test_reservoir_py(1, reservoir_size=871, lr=0.002001591748531257, sr=0.08189176846577592, reg = 1e-7, train_time=5000, warmup=100, predict_n=5000, num_points=100000, plot_data=True)
-
-# Hyperparameter tuning
-
-# 1. Tune reservoir size
-
-
-#for size in range(100, 2200, 100):
-    #test_reservoir_py(1, reservoir_size=size, lr=0.5, sr=0.9, reg = 1e-7, train_time=10000, warmup=100, predict_n=10000, num_points=100000)
-
+# test_reservoir_py(1, train_time=1000, warmup=100, num_points=100000)
+#
 # test_data = np.loadtxt(f"predictions/axon_1_test_data.csv", delimiter=",")
 # predictions = np.loadtxt(f"predictions/axon_1_prediction.csv", delimiter=",")
+
+wiener_filter_predict(1)
 
 # plt.figure(figsize=(10, 3))
 # plt.title("SQUID Training Data: ReservoirPy")
