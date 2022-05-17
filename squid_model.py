@@ -61,6 +61,7 @@ def wiener_filter_predict(axon_num, train_time=10000, num_timesteps=1000):
         preds = np.append(preds, next_pred)
 
     preds = preds.T
+    print(preds.shape)
 
     plt.figure(figsize=(10, 3))
     plt.title("SQUID Training Data: Wiener Filter, No Reservoir")
