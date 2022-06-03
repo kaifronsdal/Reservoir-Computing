@@ -158,7 +158,7 @@ prediction_lengths = [5, 10, 15, 20, 25]
 sequence_lengths = [10, 20, 30, 40, 50]
 hidden_sizes = [8, 16, 32, 64, 128]
 
-trial_mses = np.zeros((len(prediction_lengths), len(sequence_lengths), len(hidden_sizes)))
+trial_mses = 100000. * np.ones((len(prediction_lengths), len(sequence_lengths), len(hidden_sizes)))
 
 #pred_length = 25
 #seq_len = 50
@@ -167,30 +167,36 @@ print("Tuning Hyperparams...")
 for i in range(len(prediction_lengths)):
     for j in range(len(sequence_lengths)):
         for k in range(len(hidden_sizes)):
-            print("Trial Indices: ")
-            print([i, j, k])
-            pred_length = prediction_lengths[i]
-            seq_len = sequence_lengths[j]
-            hidden_size = hidden_sizes[k]
 
-            x_train, y_train = preprocess_data(train_data, seq_len)
-            x_test, y_test = preprocess_data(test_data, seq_len)
+            try {
+                print("Trial Indices: ")
+                print([i, j, k])
+                pred_length = prediction_lengths[i]
+                seq_len = sequence_lengths[j]
+                hidden_size = hidden_sizes[k]
 
-            input_size = 1
-            #hidden_size = 16
-            num_layers = 1
+                x_train, y_train = preprocess_data(train_data, seq_len)
+                x_test, y_test = preprocess_data(test_data, seq_len)
 
-            # model_names = ["lstm_thurs_1001.pb", "lstm_mon_2.pb", "lstm_mon_3.pb", "lstm_mon_4.pb", "lstm_mon_5.pb", "lstm_mon_6.pb", "lstm_mon_7.pb", "lstm_mon_8.pb", "lstm_mon_9.pb", "lstm_mon_10.pb"]
-            # savepath_names = ["lstm_squid_preds_100.png", "lstm_squid_preds_200.png", "lstm_squid_preds_300.png", "lstm_squid_preds_400.png", "lstm_squid_preds_500.png", "lstm_squid_preds_600.png", "lstm_squid_preds_700.png", "lstm_squid_preds_800.png", "lstm_squid_preds_900.png", "lstm_squid_preds_1000.png"]
-            #
-            lstm = train_model(x_train, y_train, input_size, hidden_size, num_layers, n_epochs=5000)
-            save_pb = "lstm_" + str(pred_length) + "_" + str(seq_len) + "_" + str(hidden_size) + ".pb"
-            torch.save(lstm.state_dict(), save_pb)
+                input_size = 1
+                #hidden_size = 16
+                num_layers = 1
 
-            savepath = "lstm_" + str(pred_length) + "_" + str(seq_len) + "_" + str(hidden_size) + ".png"
-            mse = predict(x_test[10000 // 50:], y_test[10000 // 50:], savepath=savepath)
-            trial_mses[i, j, k] = mse
-            print("Mean-Squared Error: " + str(mse))
+                # model_names = ["lstm_thurs_1001.pb", "lstm_mon_2.pb", "lstm_mon_3.pb", "lstm_mon_4.pb", "lstm_mon_5.pb", "lstm_mon_6.pb", "lstm_mon_7.pb", "lstm_mon_8.pb", "lstm_mon_9.pb", "lstm_mon_10.pb"]
+                # savepath_names = ["lstm_squid_preds_100.png", "lstm_squid_preds_200.png", "lstm_squid_preds_300.png", "lstm_squid_preds_400.png", "lstm_squid_preds_500.png", "lstm_squid_preds_600.png", "lstm_squid_preds_700.png", "lstm_squid_preds_800.png", "lstm_squid_preds_900.png", "lstm_squid_preds_1000.png"]
+                #
+                lstm = train_model(x_train, y_train, input_size, hidden_size, num_layers, n_epochs=5000)
+                save_pb = "lstm_" + str(pred_length) + "_" + str(seq_len) + "_" + str(hidden_size) + ".pb"
+                torch.save(lstm.state_dict(), save_pb)
+
+                savepath = "lstm_" + str(pred_length) + "_" + str(seq_len) + "_" + str(hidden_size) + ".png"
+                mse = predict(x_test[10000 // 50:], y_test[10000 // 50:], savepath=savepath)
+                trial_mses[i, j, k] = mse
+                print("Mean-Squared Error: " + str(mse))
+            } catch {
+                print("These hyperparams caused a crash.")
+                continue
+            }
 
 min_loss = trial_mses[0, 0, 0]
 optimal_hyperparams_index = [0, 0, 0]
