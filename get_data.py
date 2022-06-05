@@ -26,4 +26,4 @@ def retrieve_data(num_axons=8):
 
 
 # Warning: this line will download nearly 600 MB of data!
-retrieve_data(num_axons=1)
+retrieve_data(num_axons=4)

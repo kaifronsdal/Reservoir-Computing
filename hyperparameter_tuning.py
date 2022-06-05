@@ -84,21 +84,38 @@ def objective(dataset, config, *, iss, size, sr, lr, ridge, seed):
 #     }
 # }
 
+# hyperopt_config = {
+#     "exp": "hyperopt-squid-ridge", # the experimentation name
+#     "hp_max_evals": 200,             # the number of different sets of parameters hyperopt has to try
+#     "hp_method": "random",           # the method used by hyperopt to choose those sets (see below)
+#     "seed": 42,                      # the random state seed, to ensure reproducibility
+#     "instances_per_trial": 1,        # how many random ESN will be tried with each sets of parameters
+#     "hp_space": {                    # what are the ranges of parameters explored
+#         "size": ["choice", 871],             # the number of neurons is fixed to 300
+#         "sr": ["loguniform", 1e-3, 1],   # the spectral radius is log-uniformly distributed between 1e-6 and 10
+#         "lr": ["loguniform", 1e-3, 1],  # idem with the leaking rate, from 1e-3 to 1
+#         "iss": ["choice", 1],           # the input scaling is fixed
+#         "ridge": ["loguniform", 1e-7, 1e-2],        # and so is the regularization parameter.
+#         "seed": ["choice", 1234]          # another random seed for the ESN initialization
+#     }
+# }
+
 hyperopt_config = {
-    "exp": "hyperopt-squid-ridge", # the experimentation name
-    "hp_max_evals": 200,             # the number of different sets of parameters hyperopt has to try
+    "exp": "hyperopt-squid-uniform", # the experimentation name
+    "hp_max_evals": 100,             # the number of different sets of parameters hyperopt has to try
     "hp_method": "random",           # the method used by hyperopt to choose those sets (see below)
     "seed": 42,                      # the random state seed, to ensure reproducibility
     "instances_per_trial": 1,        # how many random ESN will be tried with each sets of parameters
     "hp_space": {                    # what are the ranges of parameters explored
-        "size": ["choice", 871],             # the number of neurons is fixed to 300
-        "sr": ["loguniform", 1e-3, 1],   # the spectral radius is log-uniformly distributed between 1e-6 and 10
-        "lr": ["loguniform", 1e-3, 1],  # idem with the leaking rate, from 1e-3 to 1
+        "size": ["uniform", 700, 2500],             # the number of neurons is fixed to 300
+        "sr": ["uniform", 1e-3, 1],   # the spectral radius is log-uniformly distributed between 1e-6 and 10
+        "lr": ["choice", 0.001456009573851054],  # idem with the leaking rate, from 1e-3 to 1
         "iss": ["choice", 1],           # the input scaling is fixed
-        "ridge": ["loguniform", 1e-7, 1e-2],        # and so is the regularization parameter.
+        "ridge": ["uniform", 1e-7, 1e-2],        # and so is the regularization parameter.
         "seed": ["choice", 1234]          # another random seed for the ESN initialization
     }
 }
+
 
 # Save hyperopt configuration
 
