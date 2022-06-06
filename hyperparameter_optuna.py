@@ -23,8 +23,10 @@ num_points = 100000
 train_time = 5000
 warmup = 150
 predict_n = 5000
-SEED = 1234
-PATH = "optimization/optuna-1-TPE-size-sr-lr-mse-2"
+EXP = 4
+SEED = 43
+TARGET = "RMSE"
+PATH = "optimization/optuna-1-TPE-size-sr-lr-mse-4"
 
 # Load and process data
 
@@ -73,7 +75,7 @@ def objective(trial):
 
     mse = rmse(data_test, predictions)
 
-    return mse ** 2
+    return mse ** EXP
 
 # search_space = {"size": [200, 2200, 50], "sr": np.logspace()}
 
@@ -85,22 +87,20 @@ study = optuna.create_study(
     pruner=optuna.pruners.MedianPruner(n_warmup_steps=10),
 )
 
-study.optimize(objective, n_trials=1, timeout=6000)
+study.optimize(objective, n_trials=150, timeout=6000)
 
-print(study.best_params)
 with open(f'{PATH}/opt-params', 'w') as f:
     json.dump(study.best_params, f)
 
-plot_optimization_history(study).write_image(f"{PATH}/history.png")
-plot_parallel_coordinate(study).write_image(f"{PATH}/parallel_coords.png")
-plot_parallel_coordinate(study, params=["Reservoir Size", "Leaking Rate"]).write_image(f"{PATH}/size_vs_lr.png")
-plot_parallel_coordinate(study, params=["Reservoir Size", "Spectral Radius"]).write_image(f"{PATH}/size_vs_sr.png")
-plot_parallel_coordinate(study, params=["Leaking Rate", "Spectral Radius"]).write_image(f"{PATH}/lr_vs_sr.png")
-plot_contour(study).write_image(f"{PATH}/contour.png")
-plot_slice(study).write_image(f"{PATH}/slice.png")
-print(plot_slice(study))
-plot_edf(study).write_image(f"{PATH}/edf.png")
-plot_param_importances(study).write_image(f"{PATH}/param_importances.png")
+plot_optimization_history(study, target_name=TARGET).write_image(f"{PATH}/history.png")
+plot_parallel_coordinate(study, target_name=TARGET).write_image(f"{PATH}/parallel_coords.png")
+plot_parallel_coordinate(study, params=["Reservoir Size", "Leaking Rate"], target_name=TARGET).write_image(f"{PATH}/size_vs_lr.png")
+plot_parallel_coordinate(study, params=["Reservoir Size", "Spectral Radius"], target_name=TARGET).write_image(f"{PATH}/size_vs_sr.png")
+plot_parallel_coordinate(study, params=["Leaking Rate", "Spectral Radius"], target_name=TARGET).write_image(f"{PATH}/lr_vs_sr.png")
+plot_contour(study, target_name=TARGET).write_image(f"{PATH}/contour.png")
+plot_slice(study, target_name=TARGET).write_image(f"{PATH}/slice.png")
+plot_edf(study, target_name=TARGET).write_image(f"{PATH}/edf.png")
+plot_param_importances(study, target_name=TARGET).write_image(f"{PATH}/param_importances.png")
 
 
 # optuna.visualization.plot_param_importances(
