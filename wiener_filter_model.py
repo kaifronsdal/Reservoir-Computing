@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from reservoirpy_model import create_data
 
 class WienerFilter:
-    # enter 'input_states' with each state as a row vector and 'output_states' as a column vector, with each
+    # Enter 'input_states' with each state as a row vector and 'output_states' as a column vector, with each
     # entry corresponding to corresponding row of 'input_states'
     def __init__(self, input_states, output_states, num_timesteps):
         assert input_states.shape[0] == output_states.shape[0]
