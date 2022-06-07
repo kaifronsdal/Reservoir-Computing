@@ -1,7 +1,5 @@
 import numpy as np
 from matrix_generation import _random_sparse, _set_spectral_radius
-from scipy import stats
-from functools import partial
 
 
 class Reservoir:
@@ -46,6 +44,11 @@ class Reservoir:
         self.state = self.zero_state()
 
     def forward_internal(self, x: np.ndarray) -> np.ndarray:
+        """
+        steps on time step forward in reservior
+        :param x: current state
+        :return: next state
+        """
         u = x.reshape(-1, 1)
         next_state = (
                 (1 - self.alpha) * self.state
@@ -54,18 +57,31 @@ class Reservoir:
         return next_state
 
     def reset(self, to_state: np.ndarray = None):
+        """
+        reset internal reservoir states
+        :param to_state: optional parameter. state to reset to
+        :return: None
+        """
         if to_state is None:
             self.state = self.zero_state()
         else:
             self.state = to_state
 
     def zero_state(self):
+        """
+        :return: default zero state
+        """
         return np.zeros((1, self.n_reservoir), dtype=self.dtype)
 
     def propagate(self, x: np.ndarray):
         self.state = self.forward_internal(x)
 
     def train(self, X):
+        """
+        Computes internal states using training data as input for each time step
+        :param X: input signal
+        :return: array of internal states for each time step
+        """
         self.reset()
         sequence_length = X.shape[0]
         states = np.zeros((sequence_length, self.n_reservoir))
@@ -76,6 +92,13 @@ class Reservoir:
         return states
 
     def run(self, sequence_length: int, model, initial_state=None):
+        """
+        Computes sequence_length internal states passing in predictions from model as next time step
+        :param sequence_length: Number of states to predict
+        :param model: model used to predict next input signal from internal states
+        :param initial_state: state to initialize reservoir to
+        :return: array of predicted signals for each time step
+        """
         self.reset(initial_state)
         states = np.zeros((sequence_length, self.n_input))
         for i in range(sequence_length):
@@ -83,4 +106,3 @@ class Reservoir:
             self.propagate(states[i, :])
 
         return states
-
