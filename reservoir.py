@@ -5,27 +5,25 @@ from matrix_generation import _random_sparse, _set_spectral_radius
 class Reservoir:
     def __init__(self, n_input: int,
                  n_reservoir: int,
-                 # n_output: int,
                  alpha: int = 0.02,
                  dtype: np.dtype = np.float64,
                  spectral_radius: int = 0.8,
-                 reservoir_density: int = 0.025,
                  random_seed=None,
                  activation=np.tanh,
                  input_density: int = 1.0):
         """
-            n_input : Size of the input.
-            n_reservoir : Number of units in the reservoir.
-            n_output : Size of the output.
-            spectral_radius : Spectral radius of the reservoir matrix.
-            reservoir_density : Proportion of non-zero weight connections in the reservoir.
-            random_seed : Seed for random weight initialization.
-            input_density : Proportion of non-zero weights between the input and reservoir matrix.
-            activation : Activation function.
+        A reservoir class that generates a reservoir and can take input signals and compute internal reservoir states.
+        :param n_input: Size of the input signal.
+        :param n_reservoir: Number of units in the reservoir.
+        :param alpha: leakage rate
+        :param dtype: data type of internal states
+        :param spectral_radius: spectral radius of the internal random sparse adjacency matrix
+        :param random_seed: seed to use for generating internal random adjacency matrix
+        :param activation: activation function
+        :param input_density: density of input function map W_in
         """
         self.n_input = n_input
         self.n_reservoir = n_reservoir
-        # self.n_output = n_output
 
         self._spectral_radius = spectral_radius
         self._reservoir_density = min(8 / n_input, 1)
